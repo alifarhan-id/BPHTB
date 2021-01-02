@@ -246,17 +246,20 @@ Ext.application({
             labelWidth: 150,
             defaultType: 'textfield',
             defaults: {
-                width: 300
+                width: 400
             },
             items: [{
+                fieldLabel: 'Nomor SSPD',
+                id: 'no_sspd'
+            }, {
                 fieldLabel: 'nik',
-                name: 'nik'
+                id: 'nik'
             }, {
                 fieldLabel: 'nama WP',
-                name: 'name_wp'
+                id: 'nama_wp'
             }, {
                 fieldLabel: 'alamat WP',
-                name: 'alamat_wp'
+                id: 'alamat_wp'
             }]
         }
         var objekPajak = Ext.apply({}, {
@@ -265,17 +268,23 @@ Ext.application({
             title: 'informasi wajib pajak',
             defaults: {
                 layout: 'column',
-                width: 300
+                width: 400
             },
             items: [{
                 fieldLabel: 'nop',
-                name: 'nop'
+                id: 'nop'
             }, {
                 fieldLabel: 'alamat_op',
-                name: 'alamat_op'
+                id: 'alamat_op'
             }, {
-                fieldLabel: 'tes',
-                name: 'tes'
+                fieldLabel: 'luas_tanah',
+                id: 'luas_tanah'
+            }, {
+                fieldLabel: 'luas_bangunan',
+                id: 'luas_bangunan'
+            }, {
+                fieldLabel: 'njop_pbb',
+                id: 'njop_pbb'
             }]
         }, wajibPajak);
 
@@ -316,17 +325,40 @@ Ext.application({
                 formBind: true, //only enabled once the form is valid
                 disabled: true,
                 handler: function () {
-                    var form = this.up('form').getForm();
-                    if (form.isValid()) {
-                        form.submit({
-                            success: function (form, action) {
-                                Ext.Msg.alert('Success', action.result.msg);
-                            },
-                            failure: function (form, action) {
-                                Ext.Msg.alert('Failed', action.result.msg);
-                            }
-                        });
+                    const dataJson = {
+                        no_sspd: Ext.getCmp('no_sspd').getValue(),
+                        nik: Ext.getCmp('nik').getValue(),
+                        nama_wp: Ext.getCmp('nama_wp').getValue(),
+                        alamat_wp: Ext.getCmp('alamat_wp').getValue(),
+                        nop: Ext.getCmp('nop').getValue(),
+                        alamat_op: Ext.getCmp('alamat_op').getValue(),
+                        luas_tanah: Ext.getCmp('luas_tanah').getValue(),
+                        luas_bangunan: Ext.getCmp('luas_bangunan').getValue(),
+                        njop_pbb: Ext.getCmp('njop_pbb').getValue()
                     }
+                    Ext.Ajax.request({
+                        url: 'http://localhost:3000/api/v1/postsspd',
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        // params: {
+                        //     dataJson
+                        // },
+                        jsonData: dataJson,
+                        success: function (response) {
+                            var msg = Ext.Msg.alert('Status', 'Changes saved successfully.', function (btn) {
+                                if (btn === 'ok') {
+                                    window.close()
+                                }
+                            });
+                        },
+                        fail: function () {
+                            Ext.Msg.alert('Status', 'data Gagal ditambahkan');
+                        }
+                    })
+
+
                 }
             }],
         });
@@ -350,6 +382,8 @@ Ext.application({
             window.show();
             myMask.hide()
         }, 1000)
+
+
 
     }
 
