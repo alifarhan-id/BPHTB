@@ -42,21 +42,7 @@ Ext.define('SspdModel', {
         }
     ]
 });
-var sspdStore = Ext.create('Ext.data.Store', {
-    proxy: {
-        model: 'SspdModel',
-        type: 'ajax',
-        url: 'http://localhost:3000/api/v1/getsspd',
-        reader: {
-            type: 'json',
-            root: 'data'
-        }
-    },
-    autoLoad: true,
-    autoSync: true,
-    pageSize: 10
 
-});
 
 Ext.application({
     name: 'MyApp',
@@ -64,9 +50,25 @@ Ext.application({
         this.mkgrid();
     },
     mkgrid: function () {
+        Ext.create('Ext.data.Store', {
+            storeId: 'sspdStore',
+            proxy: {
+                model: 'SspdModel',
+                type: 'ajax',
+                url: 'http://localhost:3000/api/v1/getsspd',
+                reader: {
+                    type: 'json',
+                    root: 'data'
+                }
+            },
+            autoLoad: true,
+            autoSync: true,
+            pageSize: 10
+
+        });
         Ext.create('Ext.grid.Panel', {
             title: 'DATA SSPD BPHTB KOTA MATARAM',
-            store: sspdStore,
+            store: 'sspdStore',
             loadMask: true,
             Width: '100%',
             Height: '100%',
@@ -206,7 +208,7 @@ Ext.application({
 
             ],
             bbar: new Ext.PagingToolbar({
-                store: sspdStore,
+                store: 'sspdStore',
                 pageSize: 10,
                 displayInfo: true,
                 displayMsg: 'Menampilkan {0} - {1} dari {2}',
@@ -347,9 +349,11 @@ Ext.application({
                         // },
                         jsonData: dataJson,
                         success: function (response) {
-                            var msg = Ext.Msg.alert('Status', 'Changes saved successfully.', function (btn) {
+                            var msg = Ext.Msg.alert('Status', 'Data Berhasil DiTambah', function (btn) {
                                 if (btn === 'ok') {
                                     window.close()
+                                    var store = Ext.StoreManager.lookup('sspdStore');
+                                    store.load()
                                 }
                             });
                         },
@@ -382,7 +386,6 @@ Ext.application({
             window.show();
             myMask.hide()
         }, 1000)
-
 
 
     }

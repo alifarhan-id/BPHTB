@@ -25,14 +25,15 @@ router.get('/api/v1/getsspd', async (req, res, next) => {
             return next(error)
         })
 })
-router.post('/api/v1/postsspd', async (req, res, next) => {
-    await db.none('INSERT INTO sspd_coba (no_sspd, nik, nama_wp, alamat_wp, nop, alamat_op, luas_tanah, luas_bangunan, njop_pbb)VALUES(${no_sspd}, ${nik}, ${nama_wp}, ${alamat_wp}, ${nop}, ${alamat_op}, ${luas_tanah}, ${luas_bangunan}, ${njop_pbb})', req.body)
+router.post('/api/v1/postsspd', (req, res, next) => {
+    db.one('INSERT INTO sspd_coba (no_sspd, nik, nama_wp, alamat_wp, nop, alamat_op, luas_tanah, luas_bangunan, njop_pbb)VALUES(${no_sspd}, ${nik}, ${nama_wp}, ${alamat_wp}, ${nop}, ${alamat_op}, ${luas_tanah}, ${luas_bangunan}, ${njop_pbb}) RETURNING *', req.body)
         .then((data) => {
             res.status(200).json({
                 status: 'successs',
                 message: 'Data Berhasil di tambah',
                 data: data,
             })
+            console.log(data)
         })
         .catch((error) => {
             return next(error)
