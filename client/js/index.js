@@ -39,6 +39,9 @@ Ext.define('SspdModel', {
         {
             name: 'njop_pbb',
             type: 'string'
+        }, {
+            name: 'create_at',
+            type: 'date'
         }
     ]
 });
@@ -47,8 +50,10 @@ Ext.define('SspdModel', {
 Ext.application({
     name: 'MyApp',
     launch: function () {
+        v_this = this;
         this.mkgrid();
     },
+
     mkgrid: function () {
         Ext.create('Ext.data.Store', {
             storeId: 'sspdStore',
@@ -68,6 +73,7 @@ Ext.application({
         });
         Ext.create('Ext.grid.Panel', {
             title: 'DATA SSPD BPHTB KOTA MATARAM',
+            id: 'sspdGrid',
             store: 'sspdStore',
             loadMask: true,
             Width: '100%',
@@ -119,8 +125,18 @@ Ext.application({
                     text: 'NJOP PBB',
                     dataIndex: 'njop_pbb',
                     flex: 1
+                }, {
+                    text: 'tangal bayar',
+                    renderer: Ext.util.Format.dateRenderer('Y-m-d'),
+                    dataIndex: 'create_at',
+                    flex: 1
                 }
             ],
+            listeners: {
+                itemdblclick: function (dv, record, item, index, e) {
+                    v_this.update();
+                }
+            },
 
 
             tbar: [
@@ -388,6 +404,180 @@ Ext.application({
         }, 1000)
 
 
+    },
+    update: function () {
+        var dataSelected = Ext.getCmp('sspdGrid').getView().getSelectionModel().getSelection();
+        console.log(dataSelected[0].data.no_sspd)
+        var wajibPajak = {
+            xtype: 'fieldset',
+            title: 'informasi wajib pajak',
+            flex: 1,
+            border: false,
+            labelWidth: 150,
+            defaultType: 'textfield',
+            defaults: {
+                width: 400
+            },
+            items: [{
+                fieldLabel: 'Nomor SSPD',
+                id: 'no_sspd',
+                value: dataSelected[0].data.no_sspd
+            }, {
+                fieldLabel: 'nik',
+                id: 'nik',
+                value: dataSelected[0].data.nik
+            }, {
+                fieldLabel: 'nama WP',
+                id: 'nama_wp',
+                value: dataSelected[0].data.nama_wp
+            }, {
+                fieldLabel: 'alamat WP',
+                id: 'alamat_wp',
+                value: dataSelected[0].data.alamat_wp
+            }]
+        }
+        var objekPajak = Ext.apply({}, {
+            flex: 1,
+            labelWidth: 30,
+            title: 'informasi wajib pajak',
+            defaults: {
+                layout: 'column',
+                width: 400
+            },
+            items: [{
+                fieldLabel: 'nop',
+                id: 'nop',
+                value: dataSelected[0].data.nop
+
+            }, {
+                fieldLabel: 'alamat_op',
+                id: 'alamat_op',
+                value: dataSelected[0].data.alamat_op
+            }, {
+                fieldLabel: 'luas_tanah',
+                id: 'luas_tanah',
+                value: dataSelected[0].data.luas_tanah
+            }, {
+                fieldLabel: 'luas_bangunan',
+                id: 'luas_bangunan',
+                value: dataSelected[0].data.luas_bangunan
+            }, {
+                fieldLabel: 'njop_pbb',
+                id: 'njop_pbb',
+                value: dataSelected[0].data.njop_pbb
+            }, {
+                fieldLabel: 'create_at',
+                xtype: 'datefield',
+                id: 'create_at',
+            }]
+        }, wajibPajak);
+
+        var myForm = {
+            xtype: 'container',
+            layout: 'hbox',
+            layoutConfig: {
+                align: 'right'
+            },
+            items: [
+                wajibPajak,
+                objekPajak
+            ],
+
+
+        };
+
+        var myFormPanel = Ext.create('Ext.form.Panel', {
+            renderTo: Ext.getBody(),
+            width: 1000,
+            title: 'Update Data SSPD',
+            bodyPadding: '10px',
+            id: 'myFormPanel',
+            layout: 'vbox',
+            layoutConfig: {
+                align: 'stretch'
+            },
+            items: [
+                myForm
+            ],
+            buttons: [{
+                text: 'Reset',
+                handler: function () {
+                    this.up('form').getForm().reset();
+                }
+            }, {
+                text: 'Submit',
+                formBind: true, //only enabled once the form is valid
+                disabled: true,
+                handler: function () {
+                    const dataJson = {
+                        no_sspd: Ext.getCmp('no_sspd').getValue(),
+                        nik: Ext.getCmp('nik').getValue(),
+                        nama_wp: Ext.getCmp('nama_wp').getValue(),
+                        alamat_wp: Ext.getCmp('alamat_wp').getValue(),
+                        nop: Ext.getCmp('nop').getValue(),
+                        alamat_op: Ext.getCmp('alamat_op').getValue(),
+                        luas_tanah: Ext.getCmp('luas_tanah').getValue(),
+                        luas_bangunan: Ext.getCmp('luas_bangunan').getValue(),
+                        njop_pbb: Ext.getCmp('njop_pbb').getValue(),
+                        create_at: Ext.getCmp('create_at').getValue(),
+                        id: dataSelected[0].data.id
+                    }
+                    Ext.Ajax.request({
+                        url: 'http://localhost:3000/api/v1/updatesspd',
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        // params: {
+                        //     dataJson
+                        // },
+                        jsonData: dataJson,
+                        success: function (response) {
+                            var msg = Ext.Msg.alert('Status', 'Data Berhasil DiTambah', function (btn) {
+                                if (btn === 'ok') {
+                                    window.close()
+                                    var store = Ext.StoreManager.lookup('sspdStore');
+                                    store.load()
+                                }
+                            });
+                        },
+                        fail: function () {
+                            Ext.Msg.alert('Status', 'data Gagal ditambahkan');
+                        }
+                    })
+
+
+                }
+            }],
+        });
+
+        var myMask = new Ext.LoadMask(Ext.getBody(), {
+            msg: "Please wait..."
+        });
+        myMask.show();
+        var window = Ext.create('Ext.window.Window', {
+            animCollapse: false,
+            constrainHeader: true,
+            layout: 'fit',
+            shim: false,
+            height: 600,
+            width: 1000,
+            layout: 'fit',
+            modal: true,
+            items: myFormPanel
+        });
+        setTimeout(function () {
+            window.show();
+            myMask.hide()
+        }, 500)
+
+
+    },
+    prosesSearch: function () {
+        Ext.Msg.alert('status', 'tesss')
     }
+
+
+
 
 });
